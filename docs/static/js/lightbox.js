@@ -34,15 +34,17 @@
         lightbox.classList.add("active");
         document.body.style.overflow = "hidden";
     }
+    function linksToImage(link) {
+        return /\.(jpe?g|png|gif|webp|avif|svg|bmp|ico|tiff?|apng)$/i.test(link.pathname);
+    }
 
     function isLightboxImage(element) {
         if (element.tagName !== "IMG") return false;
         if (element.dataset.noLightbox !== undefined) return false;
-        var link = element.closest("a[href]");
-        if (link && link.hasAttribute("download")) return false;
-        if (link && !/\.(?:png|jpe?g|gif|webp|svg|avif|bmp)$/i.test(link.pathname)) return false;
+        let link = element.closest("a[href]");
+        if (link && !linksToImage(link)) return false;
         if (element.height < 50 && element.width < 50) return false;
-        
+
         var contentSelectors = [
             "article",
             ".content",
@@ -51,24 +53,23 @@
             ".td-content",
             ".page-content"
         ];
-        
+
         for (var i = 0; i < contentSelectors.length; i++) {
             if (element.closest(contentSelectors[i])) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
     document.addEventListener("click", function (e) {
-        if (!e.defaultPrevented && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && isLightboxImage(e.target)) {
+        if (isLightboxImage(e.target)) {
             e.preventDefault();
             e.stopPropagation();
-            var link = e.target.closest("a[href]");
-            openLightbox(link ? link.href : e.target.getAttribute("src"), e.target.getAttribute("alt") || "");
+            openLightbox(e.target.getAttribute("src"), e.target.getAttribute("alt") || "");
         }
-    });
+    }, true);
 
     lightbox.addEventListener("click", function (e) {
         if (e.target === lightbox || e.target.id === "lightbox-caption") {
@@ -91,7 +92,7 @@
 })();
 
 if (window.addEventListener) {
-    window.addEventListener("popstate", function() {
+    window.addEventListener("popstate", function () {
         setTimeout(initLightbox, 100);
     });
 }
